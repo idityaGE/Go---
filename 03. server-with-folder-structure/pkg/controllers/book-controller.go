@@ -14,9 +14,9 @@ import (
 var NewBook models.Book
 
 func GetBook(w http.ResponseWriter, r *http.Request) {
-	newBook := models.GetAllBook()
+	allBooks := models.GetAllBook()
 
-	res, _ := json.Marshal(newBook)
+	res, _ := json.Marshal(allBooks)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
@@ -59,6 +59,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("Error while parsing")
 	}
+
 	book := models.DeleteBook(ID)
 
 	res, _ := json.Marshal(book)
@@ -68,7 +69,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
-	var updateBook = &models.Book{}
+	updateBook := &models.Book{}
 	utils.ParseBody(r, updateBook)
 
 	vars := mux.Vars(r)
