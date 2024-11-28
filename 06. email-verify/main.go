@@ -5,43 +5,34 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/smtp"
 	"os"
-	"regexp"
 	"strings"
 )
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("Email Verifier")
-	fmt.Println("--------------")
+	fmt.Println("Email Domain Verifier")
+	fmt.Println("----------------------")
 	fmt.Println("Type 'exit' to quit.")
-
 	for {
-		fmt.Print("\nEnter an Email Address: ")
+		fmt.Print("\nEnter a Domain: ")
 		scanner.Scan()
-		email := strings.TrimSpace(scanner.Text())
+		domain := strings.TrimSpace(scanner.Text())
 
 		// Exit if user types "exit"
-		if strings.ToLower(email) == "exit" {
+		if strings.ToLower(domain) == "exit" {
 			fmt.Println("Exiting program. Goodbye!")
 			break
 		}
 
-		// Validate email
-		if !isValidEmail(email) {
-			fmt.Println("Invalid email format. Please enter a valid email address.")
+		// Validate domain
+		if domain == "" || !isValidDomain(domain) {
+			fmt.Println("Invalid domain. Please enter a valid domain.")
 			continue
 		}
 
-		// Split into local part and domain part
-		parts := strings.Split(email, "@")
-		localPart, domain := parts[0], parts[1]
-
-		// Verify domain and email
-		fmt.Printf("\nValidating Email: %s\n", email)
+		// Check domain and display results
 		checkDomain(domain)
-		checkEmailAddress(localPart, domain)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -113,51 +104,18 @@ func checkDomain(domain string) {
 	}
 }
 
-// Checks if the email address is accepted by the domain's SMTP server
-func checkEmailAddress(localPart, domain string) {
-	mxRecords, err := net.LookupMX(domain)
-	if err != nil || len(mxRecords) == 0 {
-		fmt.Println("Cannot verify email address: No MX records found.")
-		return
+// Validates the domain using basic criteria
+func isValidDomain(domain string) bool {
+	if len(domain) < 3 || len(domain) > 253 {
+		return false
 	}
-
-	// Connect to the SMTP server of the highest-priority MX record
-	mxServer := mxRecords[0].Host
-	fmt.Printf("Checking email address on SMTP server: %s\n", mxServer)
-
-	client, err := smtp.Dial(mxServer + ":25")
-	if err != nil {
-		fmt.Printf("SMTP Connection Failed: %v\n", err)
-		return
+	if strings.HasPrefix(domain, ".") || strings.HasSuffix(domain, ".") {
+		return false
 	}
-	defer client.Close()
-
-	// Perform handshake and set sender and recipient
-	err = client.Hello("example.com")
-	if err != nil {
-		fmt.Printf("SMTP HELO Failed: %v\n", err)
-		return
+	for _, part := range strings.Split(domain, ".") {
+		if len(part) < 1 || len(part) > 63 {
+			return false
+		}
 	}
-
-	err = client.Mail("verify@example.com") // Set a dummy sender email
-	if err != nil {
-		fmt.Printf("SMTP MAIL FROM Failed: %v\n", err)
-		return
-	}
-
-	err = client.Rcpt(localPart + "@" + domain) // Check recipient
-	if err != nil {
-		fmt.Printf("Recipient Rejected: %v\n", err)
-		return
-	}
-
-	fmt.Printf("The email address %s@%s is valid!\n", localPart, domain)
-}
-
-// Validates the email address syntax
-func isValidEmail(email string) bool {
-	// Simple regex for email validation
-	regex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	re := regexp.MustCompile(regex)
-	return re.MatchString(email)
+	return true
 }
