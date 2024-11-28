@@ -51,25 +51,65 @@ func main() {
 
 // Checks the domain's DNS records
 func checkDomain(domain string) {
-	hasMX := false
+	hasMX, hasSPF, hasDMARC := false, false, false
+	SPFRecord, DMARCRecord := "", ""
 
 	// Check MX Records
 	mxRecords, err := net.LookupMX(domain)
 	if err != nil {
-		fmt.Printf("Domain Check Failed: %v\n", err)
-		return
-	}
-	if len(mxRecords) > 0 {
+		fmt.Printf("MX Record Error: %v\n", err)
+	} else if len(mxRecords) > 0 {
 		hasMX = true
 	}
 
+	// Check SPF Records
+	txtRecords, err := net.LookupTXT(domain)
+	if err != nil {
+		fmt.Printf("SPF Record Error: %v\n", err)
+	} else {
+		for _, record := range txtRecords {
+			if strings.HasPrefix(record, "v=spf1") {
+				hasSPF = true
+				SPFRecord = record
+				break
+			}
+		}
+	}
+
+	// Check DMARC Records
+	dmarcRecords, err := net.LookupTXT("_dmarc." + domain)
+	if err != nil {
+		fmt.Printf("DMARC Record Error: %v\n", err)
+	} else {
+		for _, record := range dmarcRecords {
+			if strings.HasPrefix(record, "v=DMARC1") {
+				hasDMARC = true
+				DMARCRecord = record
+				break
+			}
+		}
+	}
+
 	// Display results
+	fmt.Println("\nVerification Results:")
 	fmt.Printf("Domain: %s\n", domain)
 	fmt.Printf("Has MX Records: %v\n", hasMX)
 	if hasMX {
 		fmt.Println("   - Mail servers found.")
 	} else {
 		fmt.Println("   - No mail servers found.")
+	}
+	fmt.Printf("Has SPF Records: %v\n", hasSPF)
+	if hasSPF {
+		fmt.Printf("   - SPF Record: %s\n", SPFRecord)
+	} else {
+		fmt.Println("   - No SPF record found.")
+	}
+	fmt.Printf("Has DMARC Records: %v\n", hasDMARC)
+	if hasDMARC {
+		fmt.Printf("   - DMARC Record: %s\n", DMARCRecord)
+	} else {
+		fmt.Println("   - No DMARC record found.")
 	}
 }
 

@@ -130,3 +130,57 @@ By combining these checks, the program ensures the domain is configured to send 
 3. Outputs the verification results.
 
 This tool is useful for debugging email configuration issues or verifying domain readiness for email services.
+
+
+# 2 go
+
+Yes, it’s possible to make this a **mail-level email verifier** by extending the logic to validate specific email addresses like `mail@domain.com`. Here's how you can achieve it:
+
+### How Email-Level Verification Works
+1. **Syntax Validation:**
+   - Check if the email address conforms to the standard email format.
+
+2. **Domain Verification:**
+   - Perform the same domain-level checks as before (MX, SPF, DMARC).
+
+3. **SMTP Server Validation:**
+   - Connect to the mail server (using the MX record) via SMTP.
+   - Check if the server accepts emails for the given address.
+
+### Updated Code for Email-Level Verification
+The following code includes email-level verification by extending the domain-level checks with syntax validation and SMTP verification:
+
+---
+
+### Key Features of the Updated Code
+
+1. **Syntax Validation (`isValidEmail`):**
+   - Uses a regular expression to ensure the email address follows a valid format.
+
+2. **Domain Validation (`checkDomain`):**
+   - Checks for MX records to ensure the domain can receive emails.
+
+3. **SMTP Validation (`checkEmailAddress`):**
+   - Connects to the mail server of the domain using SMTP.
+   - Simulates sending an email to the target address.
+   - Reports whether the server accepts the recipient.
+
+4. **Interactive Input:**
+   - Users can verify multiple email addresses without restarting the program.
+   - Graceful exit by typing `exit`.
+
+---
+
+### Important Notes
+1. **Dummy Sender Email:**  
+   - The `client.Mail("verify@example.com")` sets a dummy sender email. Some servers might block verification attempts without an actual sender.
+
+2. **Rate-Limiting and Blocking:**  
+   - Frequent checks may trigger anti-spam protections. Use responsibly and avoid abusing public mail servers.
+
+3. **Email Privacy:**  
+   - SMTP verification is intrusive and may expose the intent of checking. It's best used for testing or with proper permissions.
+
+---
+
+This updated program verifies email addresses at both the **syntax level** and the **SMTP server level**, making it suitable for more comprehensive email validation.
