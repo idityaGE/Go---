@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: go-server-mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -10,17 +10,31 @@ services:
       MYSQL_USER: testuser
       MYSQL_PASSWORD: testpassword
     ports:
-      - 3306:3306
+      - "3306:3306"
     volumes:
       - db-data:/var/lib/mysql
+    networks:
+      - go-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   server:
-    build: .
+    build:
+      context: .
     container_name: go-server
     ports:
-      - "8080:9010"
+      - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - go-network
 
 volumes:
   db-data:
+
+networks:
+  go-network:

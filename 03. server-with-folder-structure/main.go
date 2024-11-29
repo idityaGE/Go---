@@ -15,6 +15,6 @@ func main() {
 
 	http.Handle("/", r)
 
-	fmt.Println("http://localhost:9010")
-	log.Fatal(http.ListenAndServe("localhost:9010", r))
+	fmt.Println("Server running at http://0.0.0.0:8080")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", r)) // Bind to 0.0.0.0
 }
