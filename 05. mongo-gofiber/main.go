@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/idityaGE/go-mongo-gofiber/controllers"
 	"github.com/idityaGE/go-mongo-gofiber/routes"
 	"go.uber.org/zap"
@@ -25,6 +26,9 @@ func main() {
 	// Initialize Fiber app
 	app := fiber.New()
 
+	// Initialize default config (Assign the middleware to /metrics)
+	app.Get("/metrics", monitor.New())
+	
 	// Define routes with grouped middleware
 	api := app.Group("/api")
 	v1 := api.Group("/v1", countRequestsMiddleware)
